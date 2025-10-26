@@ -71,11 +71,9 @@ Route::middleware('auth')->group(function () {
         return view('admin.inventory', compact('inventory'));
     });
     
-    // Orders
-    Route::get('/admin/orders', function() {
-        $orders = \App\Models\Order::all();
-        return view('admin.orders', compact('orders'));
-    });
+    // Orders - USING CONTROLLER NOW
+    Route::get('/admin/orders', [OrderController::class, 'index']);
+    Route::post('/admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     
     // Reports
     Route::get('/admin/reports', [ReportController::class, 'index']);
@@ -91,6 +89,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/customer/home', function() {
         return view('customer.home');
     });
+    
+    // CUSTOMER ORDER ROUTE - ADD THIS!
+    Route::post('/customer/orders', [OrderController::class, 'store']);
     
     Route::get('/', function () { 
         // Redirect to appropriate home based on role

@@ -6,6 +6,8 @@
     <title>Foodhouse - Order Food</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- ADD CSRF TOKEN -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .hero-section {
             background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
@@ -67,6 +69,11 @@
         }
         .cart-overlay.show {
             display: block;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
@@ -273,7 +280,16 @@
                     <label class="form-label">Table Number</label>
                     <input type="number" class="form-control" id="tableNumber" min="1" placeholder="Enter table number" required>
                 </div>
-                <button class="btn btn-success w-100" onclick="placeOrder()">
+                
+                <!-- Loading Indicator -->
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Processing your order...</p>
+                </div>
+                
+                <button class="btn btn-success w-100" onclick="placeOrder()" id="placeOrderBtn">
                     <i class="fas fa-paper-plane me-2"></i>Place Order
                 </button>
             </div>
@@ -372,8 +388,11 @@
             updateCart();
         }
         
+        // UPDATED: Place Order function that sends data to backend
         function placeOrder() {
             const tableNumber = document.getElementById('tableNumber').value;
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
             
             if (!tableNumber) {
                 alert('Please enter your table number!');
@@ -385,14 +404,60 @@
                 return;
             }
             
-            // Here you would typically send the order to the server
-            alert(`Order placed for table ${tableNumber}! Total: ${document.getElementById('cartTotal').textContent}`);
+            // Show loading, hide button
+            placeOrderBtn.style.display = 'none';
+            loadingIndicator.style.display = 'block';
             
-            // Clear cart
-            cart = [];
-            updateCart();
-            document.getElementById('tableNumber').value = '';
-            toggleCart();
+            // Prepare order data for backend
+            const orderData = {
+                table_number: parseInt(tableNumber),
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            };
+            
+            // Send order to server using Fetch API
+            fetch('/customer/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading, show button
+                placeOrderBtn.style.display = 'block';
+                loadingIndicator.style.display = 'none';
+                
+                if (data.success) {
+                    alert(`✅ Order placed successfully!\nOrder Number: ${data.order_number}\nTable: ${tableNumber}\nTotal: ${document.getElementById('cartTotal').textContent}`);
+                    
+                    // Clear cart
+                    cart = [];
+                    updateCart();
+                    document.getElementById('tableNumber').value = '';
+                    toggleCart();
+                } else {
+                    alert('❌ Failed to place order. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Hide loading, show button
+                placeOrderBtn.style.display = 'block';
+                loadingIndicator.style.display = 'none';
+                alert('❌ Error placing order. Please check your connection and try again.');
+            });
         }
         
         // Category filtering
