@@ -13,7 +13,13 @@ use Illuminate\Http\Request;
 // Login Routes
 Route::get('/login', function () {
     if (Auth::check()) {
-        return redirect('/admin');
+        // Redirect based on user role
+        $user = Auth::user();
+        if ($user->isAdmin() || $user->isStaff()) {
+            return redirect('/admin');
+        } else {
+            return redirect('/customer/home');
+        }
     }
     return view('auth.login');
 })->name('login');
@@ -26,7 +32,14 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($request->only('email', 'password'))) {
         $request->session()->regenerate();
-        return redirect('/admin');
+        
+        // Redirect based on user role
+        $user = Auth::user();
+        if ($user->isAdmin() || $user->isStaff()) {
+            return redirect('/admin');
+        } else {
+            return redirect('/customer/home');
+        }
     }
 
     return back()->withErrors([
@@ -45,7 +58,6 @@ Route::post('/logout', function (Request $request) {
 Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/admin', [DashboardController::class, 'index']);
-    Route::get('/', function () { return redirect('/admin'); });
     
     // Users
     Route::get('/admin/users', function() {
@@ -66,9 +78,7 @@ Route::middleware('auth')->group(function () {
     });
     
     // Reports
-   // Reports - using controller
-Route::get('/admin/reports', [ReportController::class, 'index']);
-
+    Route::get('/admin/reports', [ReportController::class, 'index']);
     
     // Settings
     Route::get('/admin/settings', function() {
@@ -76,10 +86,28 @@ Route::get('/admin/reports', [ReportController::class, 'index']);
     });
 });
 
-// Emergency login route
+// Customer Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/customer/home', function() {
+        return view('customer.home');
+    });
+    
+    Route::get('/', function () { 
+        // Redirect to appropriate home based on role
+        $user = Auth::user();
+        if ($user->isAdmin() || $user->isStaff()) {
+            return redirect('/admin');
+        } else {
+            return redirect('/customer/home');
+        }
+    });
+});
+
+// Emergency login routes
 Route::get('/fix-login', function() {
     \App\Models\User::truncate();
     
+    // Create admin user
     $admin = new \App\Models\User();
     $admin->name = 'Admin';
     $admin->email = 'admin@foodhouse.com';
@@ -87,7 +115,24 @@ Route::get('/fix-login', function() {
     $admin->role = 'admin';
     $admin->save();
     
+    // Create customer user
+    $customer = new \App\Models\User();
+    $customer->name = 'John Customer';
+    $customer->email = 'customer@foodhouse.com';
+    $customer->password = \Illuminate\Support\Facades\Hash::make('customer123');
+    $customer->role = 'customer';
+    $customer->save();
+    
     \Illuminate\Support\Facades\Auth::login($admin);
     
-    return redirect('/admin')->with('success', 'User created and logged in!');
+    return redirect('/admin')->with('success', 'Users created and logged in as Admin!');
+});
+
+Route::get('/login-as-customer', function() {
+    $customer = \App\Models\User::where('email', 'customer@foodhouse.com')->first();
+    if ($customer) {
+        \Illuminate\Support\Facades\Auth::login($customer);
+        return redirect('/customer/home')->with('success', 'Logged in as Customer!');
+    }
+    return redirect('/fix-login');
 });

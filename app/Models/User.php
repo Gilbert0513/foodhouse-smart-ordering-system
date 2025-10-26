@@ -22,9 +22,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    // Relationship with orders
-    public function orders()
+    public function isAdmin()
     {
-        return $this->hasMany(Order::class);
+        return $this->role === 'admin';
+    }
+
+    public function isStaff()
+    {
+        return $this->role === 'staff';
+    }
+
+    public function isCustomer()
+    {
+        return $this->role === 'customer';
     }
 }

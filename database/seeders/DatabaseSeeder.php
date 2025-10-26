@@ -18,8 +18,17 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'created_at' => now(),
             'updated_at' => now(),
+            
         ]);
-
+        // Add customer user
+DB::table('users')->insert([
+    'name' => 'John Customer',
+    'email' => 'customer@foodhouse.com',
+    'password' => Hash::make('customer123'),
+    'role' => 'customer',
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
         // Create sample inventory
         DB::table('inventory')->insert([
             [
