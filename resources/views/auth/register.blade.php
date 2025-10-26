@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Foodhouse</title>
+    <title>Register - Foodhouse</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background: linear-gradient(-45deg, #ff6b6b, #ffd93d, #6bcf7f, #4d96ff);
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
             min-height: 100vh;
@@ -22,7 +22,7 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        .login-box {
+        .register-box {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 25px;
@@ -57,12 +57,14 @@
             border: 2px solid #e9ecef;
             border-radius: 8px;
             transition: all 0.3s ease;
-            transform: translateX(-20px);
+            transform: translateX(20px);
             opacity: 0;
             animation: slideIn 0.5s ease-out forwards;
         }
         .form-control:nth-child(1) { animation-delay: 0.7s; }
         .form-control:nth-child(2) { animation-delay: 0.8s; }
+        .form-control:nth-child(3) { animation-delay: 0.9s; }
+        .form-control:nth-child(4) { animation-delay: 1.0s; }
         @keyframes slideIn {
             to {
                 transform: translateX(0);
@@ -70,8 +72,8 @@
             }
         }
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
             transform: scale(1.02);
         }
         .btn {
@@ -81,7 +83,7 @@
             transition: all 0.3s ease;
             transform: translateY(20px);
             opacity: 0;
-            animation: slideUpBtn 0.5s ease-out 1s forwards;
+            animation: slideUpBtn 0.5s ease-out 1.1s forwards;
         }
         @keyframes slideUpBtn {
             to {
@@ -96,7 +98,7 @@
         .links {
             transform: translateY(10px);
             opacity: 0;
-            animation: fadeIn 0.5s ease-out 1.2s forwards;
+            animation: fadeIn 0.5s ease-out 1.3s forwards;
         }
         @keyframes fadeIn {
             to {
@@ -109,8 +111,16 @@
             animation: floating 3s ease-in-out infinite;
         }
         @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.02); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -118,10 +128,10 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-10 col-sm-8 col-md-5 col-lg-4">
-                <div class="login-box">
+                <div class="register-box">
                     <div class="logo floating">
-                        <h4 class="mb-2" style="color: #667eea;">🍽️ Foodhouse</h4>
-                        <p class="text-muted small-text">Welcome back!</p>
+                        <h4 class="mb-2" style="color: #ff6b6b;">🍽️ Foodhouse</h4>
+                        <p class="text-muted small-text">Join us today!</p>
                     </div>
                     
                     @if($errors->any())
@@ -130,32 +140,44 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="/login">
+                    <form method="POST" action="/register">
                         @csrf
-                        <div class="mb-3">
+                        <div class="mb-2">
+                            <input type="text" class="form-control" name="name" placeholder="👤 Full Name" required>
+                        </div>
+                        <div class="mb-2">
                             <input type="email" class="form-control" name="email" placeholder="📧 Email" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-2">
                             <input type="password" class="form-control" name="password" placeholder="🔒 Password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            🚀 Sign In
+                        <div class="mb-3">
+                            <input type="password" class="form-control" name="password_confirmation" placeholder="✅ Confirm Password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3 pulse" style="background: linear-gradient(45deg, #ff6b6b, #ff8e8e); border: none;">
+                            ✨ Create Account
                         </button>
                     </form>
 
-                    <div class="text-center small-text mb-3 links">
-                        Don't have an account? 
-                        <a href="/register" class="text-decoration-none fw-bold" style="color: #667eea;">Sign Up</a>
-                    </div>
-
-                    <div class="small-text text-center text-muted links">
-                        <div class="mb-1">👑 admin@foodhouse.com</div>
-                        <div class="mb-1">👤 customer@foodhouse.com</div>
-                        <div class="fw-bold">password: admin123</div>
+                    <div class="text-center small-text links">
+                        Already have an account? 
+                        <a href="/login" class="text-decoration-none fw-bold" style="color: #ff6b6b;">Sign In</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.querySelector('input[name="password"]').value;
+            const confirmPassword = document.querySelector('input[name="password_confirmation"]').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+    </script>
 </body>
 </html>

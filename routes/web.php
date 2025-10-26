@@ -47,6 +47,35 @@ Route::post('/login', function (Request $request) {
     ]);
 });
 
+// REGISTRATION ROUTES - ADD THESE
+Route::get('/register', function () {
+    if (Auth::check()) {
+        return redirect('/customer/home');
+    }
+    return view('auth.register');
+})->name('register');
+
+Route::post('/register', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    // Create new user as customer
+    $user = \App\Models\User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+        'role' => 'customer',
+    ]);
+
+    // Auto login after registration
+    Auth::login($user);
+
+    return redirect('/customer/home')->with('success', 'Registration successful! Welcome to Foodhouse!');
+});
+
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
@@ -54,6 +83,7 @@ Route::post('/logout', function (Request $request) {
     return redirect('/login');
 });
 
+// ... rest of your existing routes remain the same ...
 // Admin Routes
 Route::middleware('auth')->group(function () {
     // Dashboard
@@ -90,7 +120,7 @@ Route::middleware('auth')->group(function () {
         return view('customer.home');
     });
     
-    // CUSTOMER ORDER ROUTE - ADD THIS!
+    // CUSTOMER ORDER ROUTE
     Route::post('/customer/orders', [OrderController::class, 'store']);
     
     Route::get('/', function () { 
